@@ -108,7 +108,8 @@
     .page-wrapper{max-width:1400px;margin:0 auto;padding:28px 24px 40px;}
     .page-banner{background:linear-gradient(135deg,var(--sap-navy) 0%,var(--sap-blue) 100%);border-radius:var(--radius);
       padding:24px 28px;margin-bottom:24px;color:#FFF;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
-    .page-banner h1{font-size:20px;font-weight:700;margin-bottom:4px;}
+    .page-banner h1{font-size:20px;font-weight:700;margin-bottom:4px;display:inline-block;animation:marquee-slide 8s linear infinite;}
+    @keyframes marquee-slide{0%{transform:translateX(0);}45%{transform:translateX(160px);}50%{transform:translateX(160px);}95%{transform:translateX(0);}100%{transform:translateX(0);}}
     .page-banner p{font-size:13px;opacity:.85;}
     .banner-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;
       padding:6px 18px;font-size:12px;font-weight:600;color:#FFF;white-space:nowrap;}
@@ -495,7 +496,7 @@ function _sapLogoSVG(gid, style='') {
           <!-- Banner -->
           <div class="page-banner">
             <div>
-              <h1><marquee behavior="slide" direction="left" scrollamount="4">Leave Consumption Dashboard</marquee></h1>
+              <h1>Leave Consumption Dashboard</h1>
               <p id="bannerSubtitle">USD MNL &nbsp;|&nbsp; Leave Consumption and Scheduling Tool</p>
               <p id="leaveFileDate" style="font-size:11px;color:rgba(255,255,255,.45);margin-top:5px;letter-spacing:.01em"></p>
             </div>
