@@ -527,6 +527,7 @@ function _sapLogoSVG(gid, style='') {
             <select class="fb-select" id="filterGroup" onchange="applyFilters()"><option value="">All Groups</option></select>
             <select class="fb-select" id="filterLeaveType" onchange="applyFilters()"><option value="">All Leave Types</option></select>
             <div class="fb-spacer"></div>
+            <button class="fb-clear" onclick="clearGlobalFilters()">Clear</button>
             <button class="btn-refresh" onclick="loadData()">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
               Refresh
@@ -2076,6 +2077,8 @@ function populateFilters() {
 function applyFilters() {
   const yr=document.getElementById("filterYear").value,mo=document.getElementById("filterMonth").value,
         gr=document.getElementById("filterGroup").value,lt=document.getElementById("filterLeaveType").value;
+
+  /* ── Records tab ── */
   filteredData=allLeaveData.filter(r=>{
     const d=parseDate(r.requestedDate);
     if(yr&&d&&String(d.getFullYear())!==yr) return false;
@@ -2085,6 +2088,28 @@ function applyFilters() {
     return true;
   });
   currentPage=1; populateRecordsFilterDropdowns(); renderTable();
+
+  /* ── Entitlement tab – sync Group + Year, then re-render ── */
+  const entGrpEl=document.getElementById("entGroup");
+  if(entGrpEl) entGrpEl.value=gr;
+  const entYrEl=document.getElementById("entYear");
+  if(entYrEl&&yr) entYrEl.value=yr;
+  renderEntitlementTable();
+
+  /* ── Expiring Credits tab – sync Group, then re-render ── */
+  const expGrpEl=document.getElementById("expGroup");
+  if(expGrpEl) expGrpEl.value=gr;
+  renderExpiringTable();
+
+  /* ── Calendar tab – sync Group filter variable + DOM select, re-render if open ── */
+  calGroupFilter=gr;
+  const calGrpEl=document.getElementById("calGroupFilter");
+  if(calGrpEl) calGrpEl.value=gr;
+  if(calRendered) calRender();
+}
+function clearGlobalFilters(){
+  ["filterYear","filterMonth","filterGroup","filterLeaveType"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+  applyFilters();
 }
 function ssPopulateFilters() {
   const years=[...new Set(allSSData.map(r=>{const d=parseDate(r.shiftDate);return d?d.getFullYear():null;}).filter(Boolean))].sort();
