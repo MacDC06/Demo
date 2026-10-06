@@ -175,7 +175,7 @@
     .table-search{border:1px solid var(--border);border-radius:4px;padding:6px 12px;font-size:13px;font-family:var(--font);width:220px;}
     .table-search:focus{outline:2px solid var(--sap-blue);border-color:transparent;}
     .table-count{font-size:12px;color:var(--text-muted);}
-    .table-wrap{overflow-x:auto;max-height:480px;overflow-y:auto;}
+    .table-wrap{overflow-x:auto;max-height:900px;overflow-y:auto;}
     table{width:100%;border-collapse:collapse;font-size:12.5px;}
     thead{position:sticky;top:0;z-index:10;}
     thead th{background:var(--sap-deep-navy);color:#FFF;padding:10px 14px;text-align:left;
@@ -1609,7 +1609,7 @@ const msalReady = (async () => {
   }
   try {
     await msalTimeout(loadMsalScript(), 15000, "MSAL script load");
-    const cfg = { auth:{ clientId:CLIENT_ID, authority:`https://login.microsoftonline.com/${TENANT_ID}`, redirectUri:" https://macdc06.github.io/USD-MNL-Leave-Consumption/" }, cache:{ cacheLocation:"sessionStorage", storeAuthStateInCookie:false } };
+    const cfg = { auth:{ clientId:CLIENT_ID, authority:`https://login.microsoftonline.com/${TENANT_ID}`, redirectUri:"https://macdc06.github.io/Demo/" }, cache:{ cacheLocation:"sessionStorage", storeAuthStateInCookie:false } };
     const inst = new msal.PublicClientApplication(cfg);
     if (typeof inst.initialize === "function") await msalTimeout(inst.initialize(), 10000, "MSAL initialize");
     try {
