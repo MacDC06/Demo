@@ -108,7 +108,8 @@
     .page-wrapper{max-width:1400px;margin:0 auto;padding:28px 24px 40px;}
     .page-banner{background:linear-gradient(135deg,var(--sap-navy) 0%,var(--sap-blue) 100%);border-radius:var(--radius);
       padding:24px 28px;margin-bottom:24px;color:#FFF;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
-    .page-banner h1{font-size:20px;font-weight:700;margin-bottom:4px;}
+    .page-banner h1{font-size:20px;font-weight:700;margin-bottom:4px;display:inline-block;animation:marquee-bounce 6s ease-in-out infinite;}
+    @keyframes marquee-bounce{0%,100%{transform:translateX(0);}50%{transform:translateX(120px);}}
     .page-banner p{font-size:13px;opacity:.85;}
     .banner-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;
       padding:6px 18px;font-size:12px;font-weight:600;color:#FFF;white-space:nowrap;}
@@ -709,10 +710,9 @@ function _sapLogoSVG(gid, style='') {
                         <th class="th-sortable tc" onclick="sortExpTable('carryForward')">2026 CF <span class="th-sort-icon" id="exh-carryForward">⇅</span></th>
                         <th class="th-sortable tc" onclick="sortExpTable('total')">Total <span class="th-sort-icon" id="exh-total">⇅</span></th>
                         <th class="th-sortable tc" onclick="sortExpTable('used')">Used <span class="th-sort-icon" id="exh-used">⇅</span></th>
-                        <th class="th-sortable tc" onclick="sortExpTable('remaining')">Remaining <span class="th-sort-icon" id="exh-remaining">⇅</span></th>
+                        <th class="th-sortable tc" onclick="sortExpTable('remaining')">Remaining 2026 <span class="th-sort-icon" id="exh-remaining">⇅</span></th>
                         <th class="th-sortable tc" onclick="sortExpTable('cf2027')">CF 2027 <span class="th-sort-icon" id="exh-cf2027">⇅</span></th>
                         <th class="th-sortable tc" onclick="sortExpTable('forfNum')">FORF. COUNT <span class="th-sort-icon" id="exh-forfNum">⇅</span></th>
-                        <th class="th-sortable" onclick="sortExpTable('urgency')">Urgency <span class="th-sort-icon" id="exh-urgency">⇅</span></th>
                       </tr>
                     </thead>
                     <tbody id="expTableBody"></tbody>
@@ -2410,7 +2410,7 @@ function renderExpiringTable(){
   document.getElementById("expStripCritical").textContent=expiringRows.filter(r=>r.urgency==="high").length;
   document.getElementById("expStripRisk").textContent=expiringRows.filter(r=>r.urgency==="medium").length;
   const tbody=document.getElementById("expTableBody");if(!tbody)return;
-  if(!rows.length){tbody.innerHTML=`<tr><td colspan="12" class="empty-state"><p>No records found.</p></td></tr>`;return;}
+  if(!rows.length){tbody.innerHTML=`<tr><td colspan="11" class="empty-state"><p>No records found.</p></td></tr>`;return;}
   tbody.innerHTML=rows.map((r,i)=>{
     const hasExp=r.urgency!=="none";
     const urgCls=r.urgency==="high"?"badge-urgency-high":r.urgency==="medium"?"badge-urgency-medium":r.urgency==="low"?"badge-urgency-low":"badge-nodata";
@@ -2419,7 +2419,7 @@ function renderExpiringTable(){
     const cf2027Cell=r.cf2027!=null?`<strong>${r.cf2027}</strong>`:"—";
     const forfCell=r.forfNum>0?`<span class="forf-flag forf-flag-${r.urgency}">${r.forfNum}</span>`:hasExp?'<span class="forf-flag-none">0</span>':"—";
     const urgCell=hasExp?`<span class="badge ${urgCls}">${urgLbl}</span>`:"<span style='color:var(--text-muted)'>—</span>";
-    return`<tr${rowCls}><td style="color:var(--text-muted)">${i+1}</td><td><strong>${escHtml(r.name||r.email)}</strong></td><td><span class="badge badge-group">${escHtml(r.group)}</span></td><td>${escHtml(r.teamLead)}</td><td class="tc">${r.entitlement??'—'}</td><td class="tc">${r.carryForward??'—'}</td><td class="tc">${r.total??'—'}</td><td class="tc">${r.used}</td><td class="tc">${r.remaining??'—'}</td><td class="tc">${cf2027Cell}</td><td class="tc">${forfCell}</td><td>${urgCell}</td></tr>`;
+    return`<tr${rowCls}><td style="color:var(--text-muted)">${i+1}</td><td><strong>${escHtml(r.name||r.email)}</strong></td><td><span class="badge badge-group">${escHtml(r.group)}</span></td><td>${escHtml(r.teamLead)}</td><td class="tc">${r.entitlement??'—'}</td><td class="tc">${r.carryForward??'—'}</td><td class="tc">${r.total??'—'}</td><td class="tc">${r.used}</td><td class="tc">${r.remaining??'—'}</td><td class="tc">${cf2027Cell}</td><td class="tc">${forfCell}</td></tr>`;
   }).join("");
 }
 function sortExpTable(key){if(expSortKey===key)expSortDir*=-1;else{expSortKey=key;expSortDir=1;}renderExpiringTable();}
