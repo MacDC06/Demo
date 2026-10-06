@@ -1609,7 +1609,7 @@ const msalReady = (async () => {
   }
   try {
     await msalTimeout(loadMsalScript(), 15000, "MSAL script load");
-    const cfg = { auth:{ clientId:CLIENT_ID, authority:`https://login.microsoftonline.com/${TENANT_ID}`, redirectUri:" https://macdc06.github.io/Demo/" }, cache:{ cacheLocation:"sessionStorage", storeAuthStateInCookie:false } };
+    const cfg = { auth:{ clientId:CLIENT_ID, authority:`https://login.microsoftonline.com/${TENANT_ID}`, redirectUri:" https://macdc06.github.io/USD-MNL-Leave-Consumption/" }, cache:{ cacheLocation:"sessionStorage", storeAuthStateInCookie:false } };
     const inst = new msal.PublicClientApplication(cfg);
     if (typeof inst.initialize === "function") await msalTimeout(inst.initialize(), 10000, "MSAL initialize");
     try {
@@ -2078,7 +2078,7 @@ function applyFilters() {
   const yr=document.getElementById("filterYear").value,mo=document.getElementById("filterMonth").value,
         gr=document.getElementById("filterGroup").value,lt=document.getElementById("filterLeaveType").value;
 
-  /* ── Records tab ── */
+  /* ── Records tab (renderTable reads global filter DOM directly) ── */
   filteredData=allLeaveData.filter(r=>{
     const d=parseDate(r.requestedDate);
     if(yr&&d&&String(d.getFullYear())!==yr) return false;
@@ -2089,19 +2089,18 @@ function applyFilters() {
   });
   currentPage=1; populateRecordsFilterDropdowns(); renderTable();
 
-  /* ── Entitlement tab – sync Group + Year, then re-render ── */
+  /* ── Entitlement tab – also sync per-tab dropdown so it shows correct value,
+       then re-render (renderEntitlementTable reads filterGroup directly as fallback) ── */
   const entGrpEl=document.getElementById("entGroup");
   if(entGrpEl) entGrpEl.value=gr;
-  const entYrEl=document.getElementById("entYear");
-  if(entYrEl&&yr) entYrEl.value=yr;
   renderEntitlementTable();
 
-  /* ── Expiring Credits tab – sync Group, then re-render ── */
+  /* ── Expiring Credits tab – sync per-tab dropdown + re-render ── */
   const expGrpEl=document.getElementById("expGroup");
   if(expGrpEl) expGrpEl.value=gr;
   renderExpiringTable();
 
-  /* ── Calendar tab – sync Group filter variable + DOM select, re-render if open ── */
+  /* ── Calendar tab – set calGroupFilter variable + sync DOM dropdown, re-render if open ── */
   calGroupFilter=gr;
   const calGrpEl=document.getElementById("calGroupFilter");
   if(calGrpEl) calGrpEl.value=gr;
@@ -2246,12 +2245,22 @@ function populateRecordsFilterDropdowns(){
   if(gSel){const p=gSel.value;const g=[...new Set(src.map(r=>r.group).filter(Boolean))].sort();gSel.innerHTML='<option value="">All Groups</option>'+g.map(x=>`<option value="${escHtml(x)}">${escHtml(x)}</option>`).join("");gSel.value=g.includes(p)?p:"";}
 }
 function renderTable(){
+  // ── Global filter bar values ──────────────────────────────
+  const _gyr=(document.getElementById("filterYear")||{value:""}).value||"";
+  const _gmo=(document.getElementById("filterMonth")||{value:""}).value||"";
+  const _ggr=(document.getElementById("filterGroup")||{value:""}).value||"";
+  const _glt=(document.getElementById("filterLeaveType")||{value:""}).value||"";
+  // ──────────────────────────────────────────────────────────
   let rows=allFullData.filter(r=>{
+    const _d=parseDate(r.requestedDate);
+    if(_gyr&&(!_d||String(_d.getFullYear())!==_gyr)) return false;
+    if(_gmo&&(!_d||String(_d.getMonth()+1)!==_gmo)) return false;
+    if(_ggr&&r.group!==_ggr) return false;
+    if(_glt&&r.leaveType!==_glt) return false;
     if(tableNameFilter&&!(r.name||"").toLowerCase().includes(tableNameFilter))return false;
     if(tableStatusFilter&&(r.status||"").toLowerCase()!==tableStatusFilter.toLowerCase())return false;
     if(tableGroupFilter&&r.group!==tableGroupFilter)return false;
     if(tableLeaveTypeFilter&&r.leaveType!==tableLeaveTypeFilter)return false;
-
     if(tableTeamLeadFilter){const tl=(rlsData[(r.agentEmail||"").toLowerCase()]||{}).teamLead||r.tlEmail||"";if(tl!==tableTeamLeadFilter)return false;}
     if(tablePlottedFilter){const pv=String(r.plotted??"").toLowerCase();const isY=pv==="yes"||pv==="true"||pv==="1";if(tablePlottedFilter==="yes"&&!isY)return false;if(tablePlottedFilter==="no"&&isY)return false;}
     return true;
@@ -2284,7 +2293,9 @@ function initEntitlementTab(){
   renderEntitlementTable();
 }
 function renderEntitlementTable(){
-  const yr=document.getElementById("entYear").value,gr=document.getElementById("entGroup").value;
+  const yr=document.getElementById("entYear")?.value||"";
+  // Prefer per-tab entGroup; fall back to global filterGroup so the global bar always works
+  const gr=(document.getElementById("entGroup")?.value||"")||(document.getElementById("filterGroup")?.value||"");
   const nm=(document.getElementById("entName").value||'').toLowerCase().trim();
   const tl=document.getElementById("entTL").value;
   const st=document.getElementById("entStatus").value;
@@ -2364,7 +2375,8 @@ function renderExpiringTable(){
   function daysUntilExpiry(){return Math.ceil((expDate-today)/86400000);}
   const d2exp=daysUntilExpiry();
   const nm=(document.getElementById("expName")?.value||'').toLowerCase().trim();
-  const gr=document.getElementById("expGroup")?.value||'';
+  // Prefer per-tab expGroup; fall back to global filterGroup
+  const gr=(document.getElementById("expGroup")?.value||"")||(document.getElementById("filterGroup")?.value||"");
   const tl=document.getElementById("expTL")?.value||'';
   const urg=document.getElementById("expUrgency")?.value||'';
   // Build ALL employees — no urgency gate
@@ -2480,6 +2492,9 @@ function renderCalendarTab(){
         <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#C7820A"></div>Holiday</div>
       </div>
     </div>`;
+  // Reflect any pre-set calGroupFilter in the dropdown
+  const _calGrpDom=document.getElementById("calGroupFilter");
+  if(_calGrpDom&&calGroupFilter) _calGrpDom.value=calGroupFilter;
   calRender();
 }
 function calApplyFilters(){
