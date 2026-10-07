@@ -382,6 +382,14 @@
     .empty-state p{font-size:14px;}
     #toastMsg{position:fixed;bottom:24px;right:24px;background:var(--sap-deep-navy);color:#FFF;padding:12px 20px;border-radius:6px;font-size:13px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;max-width:360px;}
     #toastMsg.show{opacity:1;}
+    .preview-mode-bar{display:none;align-items:center;gap:12px;padding:8px 24px;
+      background:#B45309;color:#FFF;font-size:12px;font-weight:600;position:sticky;top:56px;z-index:99;
+      border-bottom:2px solid #92400E;flex-wrap:wrap;}
+    .preview-mode-bar svg{flex-shrink:0;}
+    .btn-exit-preview{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#FFF;
+      border-radius:4px;padding:4px 14px;font-size:11px;font-weight:700;font-family:var(--font);
+      cursor:pointer;transition:background .15s;white-space:nowrap;}
+    .btn-exit-preview:hover{background:rgba(255,255,255,.35);}
     .footer{text-align:center;padding:20px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border);margin-top:16px;}
   </style>
 </head>
@@ -425,6 +433,13 @@ function _sapLogoSVG(gid, style='') {
     </div>
   </div>
 </header>
+
+<!-- ── Preview Mode Banner ── -->
+<div class="preview-mode-bar" id="previewModeBanner">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+  <span id="previewModeLabel">Preview Mode Active</span>
+  <button class="btn-exit-preview" onclick="exitViewPreview()">Exit Preview</button>
+</div>
 
 <!-- ── Login Screen ── -->
 <div id="loginScreen">
@@ -865,6 +880,29 @@ function _sapLogoSVG(gid, style='') {
                     <input class="add-admin-input" id="addAdminInput" type="email" placeholder="Enter email address..."/>
                     <button class="btn-add-admin" onclick="addAdmin()">Add Admin</button>
                   </div>
+                </div>
+                <div class="access-card" style="margin-top:20px">
+                  <h3>View Preview</h3>
+                  <p class="access-desc">Simulate how the dashboard looks for a specific role and person. Your admin access is preserved — click <strong>Exit Preview</strong> to return to your full view.</p>
+                  <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px">
+                    <div class="form-group" style="min-width:160px">
+                      <label class="form-label">Select Role</label>
+                      <select class="form-control" id="previewRole" onchange="populatePreviewNames()">
+                        <option value="">— Role —</option>
+                        <option value="agent">Agent</option>
+                        <option value="tl">Team Lead</option>
+                      </select>
+                    </div>
+                    <div class="form-group" style="min-width:220px">
+                      <label class="form-label">Name</label>
+                      <select class="form-control" id="previewName">
+                        <option value="">— Select Name —</option>
+                      </select>
+                    </div>
+                    <button class="btn-add-admin" onclick="applyViewPreview()">Preview</button>
+                    <button class="fb-clear" id="btnExitPreviewCard" style="display:none" onclick="exitViewPreview()">Exit Preview</button>
+                  </div>
+                  <div id="previewCardBanner" style="display:none;padding:8px 14px;background:#FFF3E0;border:1px solid #FCD09A;border-radius:6px;font-size:12px;color:#B45309;font-weight:600"></div>
                 </div>
               </div>
 
@@ -3706,6 +3744,103 @@ function viewAllSS(){
 function viewAllSSAdmin(){
   let rows=_sortRows([...ssAdminData],ssAdminSortKey,ssAdminSortDir);
   _openTableWindow(`Pending Slide/Swap (${rows.length})`,"Pending Slide/Swap requests",'<th>#</th><th>Requestor</th><th>Type</th><th>Status</th><th>Shift Date</th><th>Orig. Schedule</th><th>Req. Schedule</th><th>Swap Name</th><th>Team Lead</th><th>Reason</th><th>Plotted</th>',(r,i)=>`<tr><td style="color:#999">${i+1}</td><td><strong>${_esc(r.requestorName||r.title)}</strong></td><td>${_esc(r.reqType)}</td><td>${_esc(r.status)}</td><td>${_fmtD(r.shiftDate)}</td><td>${_esc(r.originalSchedule)}</td><td>${_esc(r.requestedSchedule)}</td><td>${_esc(r.swapName)}</td><td>${_esc(r.teamLead)}</td><td>${_esc(r.reason)}</td><td>${_plotBadge(r.plotted)}</td></tr>`,rows);
+}
+
+/* ══════════════ VIEW PREVIEW (Admin Role Simulation) ══════════════ */
+let _previewActive=false;
+let _prevLeave,_prevFull,_prevAdmin,_prevCal,_prevSS,_prevRole,_prevEmail,_prevName;
+
+function populatePreviewNames(){
+  const role=document.getElementById("previewRole").value;
+  const sel=document.getElementById("previewName");
+  sel.innerHTML='<option value="">— Select Name —</option>';
+  if(!role)return;
+  const entries=Object.values(rlsData)
+    .filter(r=>r.role===role&&r.name)
+    .sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  entries.forEach(r=>{
+    const o=document.createElement("option");
+    o.value=r.email;
+    o.textContent=r.name;
+    sel.appendChild(o);
+  });
+}
+
+function applyViewPreview(){
+  const role=document.getElementById("previewRole").value;
+  const email=document.getElementById("previewName").value;
+  if(!role||!email){showToast("Please select both a role and a name.");return;}
+  const person=rlsData[email];
+  if(!person){showToast("Person not found in roster.");return;}
+
+  // Save originals only on first preview (not on re-preview)
+  if(!_previewActive){
+    _prevLeave=[...allLeaveData];_prevFull=[...allFullData];
+    _prevAdmin=[...allAdminData];_prevCal=[...allCalendarData];
+    _prevSS=[...allSSData];
+    _prevRole=currentUserRole;_prevEmail=currentUserEmail;_prevName=currentUserName;
+  } else {
+    // Re-preview: restore originals first so RLS filter starts clean
+    allLeaveData=[..._prevLeave];allFullData=[..._prevFull];
+    allAdminData=[..._prevAdmin];allCalendarData=[..._prevCal];
+    allSSData=[..._prevSS];
+  }
+
+  // Apply simulated identity
+  currentUserRole=role;currentUserEmail=email;currentUserName=person.name||email;
+
+  _applyRLSToLeaveData();
+  _applyRLSToSSData();
+  ssAdminData=allSSData.filter(r=>(r.status||'').trim().toUpperCase()==='PENDING');
+
+  // Re-render all sections
+  populateFilters();applyFilters();
+  ssPopulateFilters();ssApplyRoleUI();ssApplyFilters();
+  calRendered=false;
+
+  _previewActive=true;
+
+  // Show banners
+  const roleLabel=role==='tl'?'Team Lead':'Agent';
+  const msg=`Previewing as ${person.name} · ${roleLabel}`;
+  const topBar=document.getElementById("previewModeBanner");
+  const topLbl=document.getElementById("previewModeLabel");
+  const cardBanner=document.getElementById("previewCardBanner");
+  const exitCard=document.getElementById("btnExitPreviewCard");
+  if(topBar){topBar.style.display="flex";}
+  if(topLbl)topLbl.textContent=msg;
+  if(cardBanner){cardBanner.style.display="block";cardBanner.textContent=msg;}
+  if(exitCard)exitCard.style.display="";
+  showToast("Preview active: "+person.name);
+}
+
+function exitViewPreview(){
+  if(!_previewActive)return;
+
+  // Restore admin identity & data
+  currentUserRole=_prevRole;currentUserEmail=_prevEmail;currentUserName=_prevName;
+  allLeaveData=[..._prevLeave];allFullData=[..._prevFull];
+  allAdminData=[..._prevAdmin];allCalendarData=[..._prevCal];
+  allSSData=[..._prevSS];
+  ssAdminData=allSSData.filter(r=>(r.status||'').trim().toUpperCase()==='PENDING');
+
+  _previewActive=false;
+
+  // Re-render
+  populateFilters();applyFilters();
+  ssPopulateFilters();ssApplyRoleUI();ssApplyFilters();
+  calRendered=false;
+
+  // Hide banners
+  const topBar=document.getElementById("previewModeBanner");
+  const cardBanner=document.getElementById("previewCardBanner");
+  const exitCard=document.getElementById("btnExitPreviewCard");
+  if(topBar)topBar.style.display="none";
+  if(cardBanner)cardBanner.style.display="none";
+  if(exitCard)exitCard.style.display="none";
+  document.getElementById("previewRole").value="";
+  document.getElementById("previewName").innerHTML='<option value="">— Select Name —</option>';
+  showToast("Preview exited. Admin view restored.");
 }
 
 /* ══════════════ PAGINATION ══════════════ */
