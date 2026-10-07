@@ -2015,7 +2015,7 @@ async function loadSSData() {
     const items=await getListItems(ssSiteIdCache,LIST_SS_ID,"Title,RequestorName,ReqType,field_2,ShiftDate,Plotted_x003f_,field_3,OriginalRD,field_5,RequestedRD,field_4,field_9,Remarks,Reason,field_7,field_6,field_8,Created,Modified");
     allSSData=items.map(i=>{
       const f=i.fields||{};
-      return {_itemId:i.id||"",title:f.Title||"",requestorName:f.RequestorName||"",reqType:f.ReqType||"",status:f.field_2||"",shiftDate:f.ShiftDate||"",plotted:f.Plotted_x003f_!=null?String(f.Plotted_x003f_):"",originalSchedule:f.field_3||"",originalRD:f.OriginalRD||"",requestedSchedule:f.field_5||"",requestedRD:f.RequestedRD||"",swapName:f.field_4||"",swapAck:f.field_9||"",agentRemarks:f.Remarks||"",reason:f.Reason||"",teamLead:normTL(f.field_7||""),swapEmail:f.field_6||"",swapTL:normTL(f.field_8||""),created:f.Created||i.createdDateTime||""};
+      return {_itemId:i.id||"",title:f.Title||"",requestorName:f.RequestorName||"",reqType:f.ReqType||"",status:f.field_2||"",shiftDate:f.ShiftDate||"",plotted:f.Plotted_x003f_!=null?String(f.Plotted_x003f_):"",originalSchedule:f.field_3||"",originalRD:f.OriginalRD||"",requestedSchedule:f.field_5||"",requestedRD:f.RequestedRD||"",swapName:f.field_4||"",swapAck:f.field_9||"",agentRemarks:f.Reason||"",reason:f.Remarks||"",teamLead:normTL(f.field_7||""),swapEmail:f.field_6||"",swapTL:normTL(f.field_8||""),created:f.Created||i.createdDateTime||""};
     });
     // ── Apply RLS visibility filter to SS data ──
     _applyRLSToSSData();
@@ -3233,14 +3233,14 @@ async function saveSSRecord(){
   const tl=document.getElementById("sfTeamLead").value.trim();if(tl)f.field_7=tl;
   const se=document.getElementById("sfSwapEmail").value.trim();if(se)f.field_6=se;
   const st=document.getElementById("sfSwapTL").value.trim();if(st)f.field_8=st;
-  const ar=document.getElementById("sfAgentRemarks").value.trim();if(ar)f.Remarks=ar;
-  const re=document.getElementById("sfReason").value.trim();if(re)f.Reason=re;
+  const ar=document.getElementById("sfAgentRemarks").value.trim();if(ar)f.Reason=ar;
+  const re=document.getElementById("sfReason").value.trim();if(re)f.Remarks=re;
   const pv=document.getElementById("sfPlotted").value;
   if(pv==="true")f["Plotted_x003f_"]=true;else if(pv==="false")f["Plotted_x003f_"]=false;
   const url=`https://graph.microsoft.com/v1.0/sites/${ssSiteIdCache}/lists/${LIST_SS_ID}/items/${editingSSRecord._itemId}/fields`;
   try {
     await graphPatch(url,f);
-    Object.assign(editingSSRecord,{reqType:f.ReqType,status:f.field_2,...(f.ShiftDate?{shiftDate:f.ShiftDate}:{}),...(f.field_3?{originalSchedule:f.field_3}:{}),...(f.OriginalRD?{originalRD:f.OriginalRD}:{}),...(f.field_5?{requestedSchedule:f.field_5}:{}),...(f.RequestedRD?{requestedRD:f.RequestedRD}:{}),...(f.field_4?{swapName:f.field_4}:{}),...(f.field_9?{swapAck:f.field_9}:{}),...(f.field_7?{teamLead:f.field_7}:{}),...(f.field_6?{swapEmail:f.field_6}:{}),...(f.field_8?{swapTL:f.field_8}:{}),...(f.Remarks?{agentRemarks:f.Remarks}:{}),...(f.Reason?{reason:f.Reason}:{}),...(pv!==""?{plotted:String(pv==="true")}:{})});
+    Object.assign(editingSSRecord,{reqType:f.ReqType,status:f.field_2,...(f.ShiftDate?{shiftDate:f.ShiftDate}:{}),...(f.field_3?{originalSchedule:f.field_3}:{}),...(f.OriginalRD?{originalRD:f.OriginalRD}:{}),...(f.field_5?{requestedSchedule:f.field_5}:{}),...(f.RequestedRD?{requestedRD:f.RequestedRD}:{}),...(f.field_4?{swapName:f.field_4}:{}),...(f.field_9?{swapAck:f.field_9}:{}),...(f.field_7?{teamLead:f.field_7}:{}),...(f.field_6?{swapEmail:f.field_6}:{}),...(f.field_8?{swapTL:f.field_8}:{}),...(f.Reason?{agentRemarks:f.Reason}:{}),...(f.Remarks?{reason:f.Remarks}:{}),...(pv!==""?{plotted:String(pv==="true")}:{})});
     ssAdminData=allSSData.filter(r=>(r.status||"").trim().toUpperCase()==="PENDING");
     msg.textContent="Saved.";msg.style.color="#1B7A3A";btn.disabled=false;
     renderSSAdminTable();ssApplyFilters();
