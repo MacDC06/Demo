@@ -227,6 +227,21 @@
     .table-search:focus{outline:2px solid var(--sap-blue);border-color:transparent;}
     .table-count{font-size:12px;color:var(--text-muted);}
     .table-wrap{overflow-x:auto;max-height:900px;overflow-y:auto;}
+    #rlsTableWrap{overflow-x:visible;max-height:900px;overflow-y:auto;}
+    #rlsTableWrap table{table-layout:fixed;width:100%;font-size:11px;}
+    #rlsTableWrap thead th{padding:8px 5px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    #rlsTableWrap tbody td{padding:7px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    #rlsTableWrap col.c-num   {width:30px;}
+    #rlsTableWrap col.c-name  {width:10%;}
+    #rlsTableWrap col.c-email {width:15%;}
+    #rlsTableWrap col.c-fn    {width:6%;}
+    #rlsTableWrap col.c-grp   {width:5%;}
+    #rlsTableWrap col.c-role  {width:5%;}
+    #rlsTableWrap col.c-tl    {width:9%;}
+    #rlsTableWrap col.c-num2  {width:4%;}
+    #rlsTableWrap col.c-site  {width:4%;}
+    #rlsTableWrap col.c-stat  {width:5%;}
+    #rlsTableWrap col.c-act   {width:7%;}
     table{width:100%;border-collapse:collapse;font-size:12.5px;}
     thead{position:sticky;top:0;z-index:10;}
     thead th{background:var(--sap-deep-navy);color:#FFF;padding:10px 14px;text-align:left;
@@ -983,8 +998,21 @@ function _sapLogoSVG(gid, style='') {
                     <span id="rlsTableCount" style="font-size:11px;color:var(--text-muted);white-space:nowrap"></span>
                     <button class="fb-clear" onclick="clearRLSFilters()">Clear Filters</button>
                   </div>
-                  <div class="table-wrap">
+                  <div class="table-wrap" id="rlsTableWrap">
                     <table>
+                      <colgroup>
+                        <col class="c-num">
+                        <col class="c-name">
+                        <col class="c-email">
+                        <col class="c-fn">
+                        <col class="c-grp"><col class="c-grp">
+                        <col class="c-role">
+                        <col class="c-tl"><col class="c-tl">
+                        <col class="c-num2"><col class="c-num2"><col class="c-num2"><col class="c-num2">
+                        <col class="c-site">
+                        <col class="c-stat">
+                        <col class="c-act">
+                      </colgroup>
                       <thead>
                         <tr>
                           <th>#</th>
