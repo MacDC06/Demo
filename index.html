@@ -988,20 +988,20 @@ function _sapLogoSVG(gid, style='') {
                       <thead>
                         <tr>
                           <th>#</th>
-                          <th>Name</th>
-                          <th>Email</th>
-                          <th>Function</th>
-                          <th class="tc">Group 2026</th>
-                          <th class="tc">Group 2027</th>
-                          <th>Role</th>
-                          <th>TL 2026</th>
-                          <th>TL 2027</th>
-                          <th class="tc">ENT 26</th>
-                          <th class="tc">CF 26</th>
-                          <th class="tc">ENT 27</th>
-                          <th class="tc">CF 27</th>
-                          <th>Site</th>
-                          <th class="tc">Status</th>
+                          <th class="th-sortable" onclick="sortRLSTable('name')">Name <span class="th-sort-icon" id="rlsh-name">⇅</span></th>
+                          <th class="th-sortable" onclick="sortRLSTable('email')">Email <span class="th-sort-icon" id="rlsh-email">⇅</span></th>
+                          <th class="th-sortable" onclick="sortRLSTable('funcRaw')">Function <span class="th-sort-icon" id="rlsh-funcRaw">⇅</span></th>
+                          <th class="th-sortable tc" onclick="sortRLSTable('group2026')">Group 2026 <span class="th-sort-icon" id="rlsh-group2026">⇅</span></th>
+                          <th class="th-sortable tc" onclick="sortRLSTable('group2027')">Group 2027 <span class="th-sort-icon" id="rlsh-group2027">⇅</span></th>
+                          <th class="th-sortable" onclick="sortRLSTable('role')">Role <span class="th-sort-icon" id="rlsh-role">⇅</span></th>
+                          <th class="th-sortable" onclick="sortRLSTable('teamLead2026')">TL 2026 <span class="th-sort-icon" id="rlsh-teamLead2026">⇅</span></th>
+                          <th class="th-sortable" onclick="sortRLSTable('teamLead2027')">TL 2027 <span class="th-sort-icon" id="rlsh-teamLead2027">⇅</span></th>
+                          <th class="th-sortable tc" onclick="sortRLSTable('ent2026')">ENT 26 <span class="th-sort-icon" id="rlsh-ent2026">⇅</span></th>
+                          <th class="th-sortable tc" onclick="sortRLSTable('cf2026')">CF 26 <span class="th-sort-icon" id="rlsh-cf2026">⇅</span></th>
+                          <th class="th-sortable tc" onclick="sortRLSTable('ent2027')">ENT 27 <span class="th-sort-icon" id="rlsh-ent2027">⇅</span></th>
+                          <th class="th-sortable tc" onclick="sortRLSTable('cf2027')">CF 27 <span class="th-sort-icon" id="rlsh-cf2027">⇅</span></th>
+                          <th class="th-sortable" onclick="sortRLSTable('site')">Site <span class="th-sort-icon" id="rlsh-site">⇅</span></th>
+                          <th class="th-sortable tc" onclick="sortRLSTable('status')">Status <span class="th-sort-icon" id="rlsh-status">⇅</span></th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -4088,7 +4088,9 @@ let rlsEditingEmail=null; // null = add mode, string = edit mode
 let rlsDeleteEmail=null;
 let rlsPageNum=1; const RLS_PAGE=50;
 let rlsFilterFn='', rlsFilterTL='', rlsFilterSite='', rlsFilterStatus='';
+let rlsSortKey='name', rlsSortDir=1;
 
+function sortRLSTable(key){if(rlsSortKey===key)rlsSortDir*=-1;else{rlsSortKey=key;rlsSortDir=1;}rlsPageNum=1;renderRLSTable();}
 function renderRLSTable(){
   const q=(document.getElementById('rlsSearch')?.value||'').toLowerCase().trim();
   rlsFilterFn=(document.getElementById('rlsFilterFunction')?.value||'');
@@ -4105,7 +4107,13 @@ function renderRLSTable(){
       if(rlsFilterStatus&&(r.status||'Active').toLowerCase()!==rlsFilterStatus.toLowerCase()) return false;
       return true;
     });
-  entries.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  entries.sort((a,b)=>{
+    const numKeys=['ent2026','cf2026','ent2027','cf2027'];
+    const av=a[rlsSortKey]??'', bv=b[rlsSortKey]??'';
+    if(numKeys.includes(rlsSortKey)){const an=parseFloat(av),bn=parseFloat(bv);return((isNaN(an)?-Infinity:an)-(isNaN(bn)?-Infinity:bn))*rlsSortDir;}
+    return String(av).localeCompare(String(bv))*rlsSortDir;
+  });
+  _updateSortIcons("rlsh-",rlsSortKey,rlsSortDir,["name","email","funcRaw","group2026","group2027","role","teamLead2026","teamLead2027","ent2026","cf2026","ent2027","cf2027","site","status"]);
   const cnt=document.getElementById('rlsTableCount');
   if(cnt)cnt.textContent=`${entries.length} entr${entries.length!==1?'ies':'y'}`;
   const total=Math.ceil(entries.length/RLS_PAGE)||1;
