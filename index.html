@@ -551,6 +551,14 @@ function _sapLogoSVG(gid, style='') {
       <!-- View Preview — admin only -->
       <div id="snav-preview-section" style="display:none">
         <div class="snav-section-title">Admin Tools</div>
+        <div class="snav-item" id="snav-tools-access" onclick="navGoAdminSub('admin-access')" title="Access Management">
+          <svg class="snav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span class="snav-label">Access Management</span>
+        </div>
+        <div class="snav-item" id="snav-tools-roster" style="display:none" onclick="navGoAdminSub('admin-roster')" title="Roster">
+          <svg class="snav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="snav-label">Roster</span>
+        </div>
         <div>
           <div class="snav-preview-header" id="snavPreviewHeader" onclick="toggleSnavPreview()" title="View Preview">
             <svg class="snav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -2002,7 +2010,7 @@ async function loadData() {
     _applyHeaderBadge();
     currentUserFunction=(rlsData[currentUserEmail]||{}).funcRaw||'';
     if(isAdmin()){const b=document.getElementById("btn-tab-admin");if(b)b.style.display="inline-block";const n=document.getElementById("snav-navsub-admin");if(n)n.style.display="";const ps=document.getElementById("snav-preview-section");if(ps)ps.style.display="";}
-    if(isWFM()){const rb=document.getElementById("btn-admin-roster");if(rb)rb.style.display="";}
+    if(isWFM()){const rb=document.getElementById("btn-admin-roster");if(rb)rb.style.display="";const sr=document.getElementById("snav-tools-roster");if(sr)sr.style.display="";}
     updateLoadingText("Loading leave records from CSV...");
     // Build name-based RLS lookup (used to infer agentEmail / tlEmail from CSV Name field)
     const rlsDataByName={};
@@ -3777,6 +3785,19 @@ function viewAllSSAdmin(){
 let _previewActive=false;
 let _prevLeave,_prevFull,_prevAdmin,_prevCal,_prevSS,_prevRole,_prevEmail,_prevName;
 
+function navGoAdminSub(subId){
+  showSection('leave',document.getElementById('snav-leave'));
+  const adminBtn=document.getElementById('btn-tab-admin');
+  if(adminBtn)switchTab('admin',adminBtn);
+  renderAdminTab();
+  const subBtn=document.querySelector(`[onclick*="switchAdminSub('${subId}'"]`);
+  switchAdminSub(subId,subBtn||null);
+  if(subId==='admin-roster')renderRLSTable();
+  // Highlight active sidenav item
+  document.querySelectorAll('#snav-tools-access,#snav-tools-roster').forEach(el=>el.classList.remove('active'));
+  const active=document.getElementById(subId==='admin-access'?'snav-tools-access':'snav-tools-roster');
+  if(active)active.classList.add('active');
+}
 function toggleSnavPreview(){
   const body=document.getElementById("snavPreviewBody");
   const hdr=document.getElementById("snavPreviewHeader");
